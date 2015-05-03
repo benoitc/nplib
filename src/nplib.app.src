@@ -1,0 +1,11 @@
+{application, nplib,
+ [
+  {description, "network protocoll library"},
+  {vsn, "0.1.0"},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib
+                 ]},
+  {env, []}
+ ]}.
