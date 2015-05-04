@@ -71,14 +71,17 @@
 -spec decode(decode_type(), binary(), http_options()) ->
     http_result() | chunked_result().
 decode(Type, Bin, Options) ->
-
-
-    case Type of
-        http ->
+    Native = proplists:get_value(native, Options, false),
+    case {Type, Native} of
+        {http, false} ->
             St = parse_options(Options, #hstate{}),
             parse_first_line(Bin, St, 0);
-        httph -> parse_header(Bin);
-        http_chunked -> decode_chunked_body(Bin)
+        {http, _} ->
+            St = parse_options(Options, #hstate{}),
+            parse_native_first_line(Bin, St, St#hstate.max_lines_empty);
+        {httph, false} -> parse_header(Bin);
+        {http, _} -> parse_native_header(Bin);
+        {http_chunked, _} -> decode_chunked_body(Bin)
     end.
 
 
@@ -287,6 +290,36 @@ read_chunk(Data, Size) ->
             {error, poorly_formatted_chunked_size};
         _ ->
             eof
+    end.
+
+
+parse_native_first_line(_Bin, _St, 0) ->
+    {error, invalid_http_message};
+parse_native_first_line(Bin, #hstate{max_line_length=Sz}=St, Empty) ->
+    case erlang:decode_packet(http_bin, Bin, [{packet_size, Sz}]) of
+        {ok, {http_response, _, _, _}, _} = Resp -> Resp;
+        {ok, {http_request, _, _, _}, _} = Req -> Req;
+        {ok, {http_error, <<"\r\n">>}, Rest} ->
+            parse_native_first_line(Rest, St, Empty - 1);
+        {ok, {http_error, <<"\n">>}, Rest} ->
+            parse_native_first_line(Rest, St, Empty - 1);
+        {more, _} = More -> More;
+        Error -> Error
+    end.
+
+
+parse_native_header(Bin) ->
+    case erlang:decode_packet(http_hbin, Bin, []) of
+        {ok, http_eoh, Rest} ->
+            {ok, http_eoh, Rest};
+        {ok, {http_header, _, K, _, V}, Rest} ->
+            {ok, {http_header, K, V}, Rest};
+        {ok, {http_error, <<"\r\n">>}, Rest} ->
+            parse_native_header(Rest);
+        {ok, {http_error, <<"\n">>}, Rest} ->
+            parse_native_header(Rest);
+        {more, _} = More -> More;
+        Error -> Error
     end.
 
 %% @private
