@@ -313,7 +313,7 @@ parse_native_header(Bin) ->
         {ok, http_eoh, Rest} ->
             {ok, http_eoh, Rest};
         {ok, {http_header, _, K, _, V}, Rest} ->
-            {ok, {http_header, K, V}, Rest};
+            {ok, {http_header, nplib_bstr:to_binary(K), V}, Rest};
         {ok, {http_error, <<"\r\n">>}, Rest} ->
             parse_native_header(Rest);
         {ok, {http_error, <<"\n">>}, Rest} ->
