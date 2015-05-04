@@ -3,7 +3,7 @@
 %%% This file is part of nplib released under the MIT license.
 %%% See the NOTICE for more information.
 %%%
--module(hackney_bstr).
+-module(nplib_bstr).
 
 -export([to_binary/1,
          to_lower/1, to_upper/1,

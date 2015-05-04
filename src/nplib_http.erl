@@ -78,7 +78,7 @@ decode(Type, Bin, Options) ->
             parse_first_line(Bin, St, 0);
         {http, _} ->
             St = parse_options(Options, #hstate{}),
-            parse_native_first_line(Bin, St, St#hstate.max_lines_empty);
+            parse_native_first_line(Bin, St, St#hstate.max_empty_lines);
         {httph, false} -> parse_header(Bin);
         {http, _} -> parse_native_header(Bin);
         {http_chunked, _} -> decode_chunked_body(Bin)
