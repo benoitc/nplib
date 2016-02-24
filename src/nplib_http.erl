@@ -309,7 +309,7 @@ parse_native_first_line(Bin, #hstate{max_line_length=Sz}=St, Empty) ->
 
 
 parse_native_header(Bin) ->
-    case erlang:decode_packet(http_hbin, Bin, []) of
+    case erlang:decode_packet(httph_bin, Bin, []) of
         {ok, http_eoh, Rest} ->
             {ok, http_eoh, Rest};
         {ok, {http_header, _, K, _, V}, Rest} ->
